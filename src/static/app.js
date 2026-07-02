@@ -19,12 +19,22 @@ document.addEventListener("DOMContentLoaded", () => {
         activityCard.className = "activity-card";
 
         const spotsLeft = details.max_participants - details.participants.length;
+        const participants = details.participants || [];
+        const participantsMarkup = participants.length
+          ? `<ul class="participants-list">${participants
+              .map((participant) => `<li>${participant}<button class="delete-participant" data-activity="${name}" data-email="${participant}" title="Remove participant">✕</button></li>`)
+              .join("")}</ul>`
+          : `<p class="participants-empty">No participants yet.</p>`;
 
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants-section">
+            <h5>Participants</h5>
+            ${participantsMarkup}
+          </div>
         `;
 
         activitiesList.appendChild(activityCard);
@@ -35,10 +45,46 @@ document.addEventListener("DOMContentLoaded", () => {
         option.textContent = name;
         activitySelect.appendChild(option);
       });
+
+      // Add event listeners for delete buttons
+      addDeleteListeners();
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
       console.error("Error fetching activities:", error);
     }
+  }
+
+  // Function to handle delete button clicks
+  function addDeleteListeners() {
+    document.querySelectorAll(".delete-participant").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const activity = btn.getAttribute("data-activity");
+        const email = btn.getAttribute("data-email");
+
+        if (confirm(`Are you sure you want to remove ${email} from ${activity}?`)) {
+          try {
+            const response = await fetch(
+              `/activities/${encodeURIComponent(activity)}/signup?email=${encodeURIComponent(email)}`,
+              {
+                method: "DELETE",
+              }
+            );
+
+            if (response.ok) {
+              // Refresh the activities list
+              fetchActivities();
+            } else {
+              const result = await response.json();
+              alert(result.detail || "Failed to remove participant");
+            }
+          } catch (error) {
+            console.error("Error removing participant:", error);
+            alert("Failed to remove participant. Please try again.");
+          }
+        }
+      });
+    });
   }
 
   // Handle form submission
