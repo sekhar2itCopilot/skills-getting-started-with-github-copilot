@@ -1,19 +1,7 @@
-from fastapi.testclient import TestClient
+"""Legacy test file - tests have been reorganized into feature-specific modules.
 
-from src.app import app
-
-
-client = TestClient(app)
-
-
-def test_unregister_participant_removes_from_activity():
-    response = client.post(
-        "/activities/Chess Club/unregister",
-        params={"email": "michael@mergington.edu"},
-    )
-
-    assert response.status_code == 200
-    assert response.json()["message"] == "Unregistered michael@mergington.edu from Chess Club"
-
-    activities = client.get("/activities").json()
-    assert "michael@mergington.edu" not in activities["Chess Club"]["participants"]
+See:
+  - test_activities.py for GET /activities tests
+  - test_signup.py for POST signup tests
+  - test_unregister.py for DELETE unregister tests
+"""
